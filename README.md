@@ -5,15 +5,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/workspace-mcp.svg)](https://pypi.org/project/workspace-mcp/)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/workspace-mcp?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=pip%20downloads)](https://pepy.tech/projects/workspace-mcp)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/workspace-mcp?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/workspace-mcp)
 [![Website](https://img.shields.io/badge/Website-workspacemcp.com-green.svg)](https://workspacemcp.com)
 
-*Full natural language control over Google Calendar, Drive, Gmail, Docs, Sheets, Slides, Forms, Tasks, and Chat through all MCP clients, AI assistants and developer tools.*
+*Full natural language control over Google Calendar, Drive, Gmail, Docs, Sheets, Slides, Forms, Tasks, Contacts, and Chat through all MCP clients, AI assistants and developer tools.*
 
-**The most feature-complete Google Workspace MCP server**, now with Remote OAuth2.1 multi-user support and 1-click Claude installation.
+**The most feature-complete Google Workspace MCP server**, with Remote OAuth2.1 multi-user support and 1-click Claude installation.
 
 
-###### Support for all free Google accounts (Gmail, Docs, Drive etc) & Google Workspace plans (Starter, Standard, Plus, Enterprise, Non Profit) with expanded app options like Chat & Spaces. <br/> Interested in a private cloud instance? [That can be arranged.](https://workspacemcp.com/workspace-mcp-cloud)
+###### Support for all free Google accounts (Gmail, Docs, Drive etc) & Google Workspace plans (Starter, Standard, Plus, Enterprise, Non Profit) with expanded app options like Chat & Spaces. <br/><br /> Interested in a private, managed cloud instance? [That can be arranged.](https://workspacemcp.com/workspace-mcp-cloud)
 
 
 </div>
@@ -96,9 +96,9 @@ A production-ready MCP server that integrates all major Google Workspace service
 
 ---
 
-**<span style="color:#72898f">✓</span> Tasks** • **<span style="color:#72898f">◆</span> Custom Search** • **<span style="color:#72898f">↻</span> Transport Support**
-- Full support for all MCP Transports
+**<span style="color:#72898f">✓</span> Tasks** • **<span style="color:#72898f">👤</span> Contacts** • **<span style="color:#72898f">◆</span> Custom Search**
 - Task & task list management with hierarchy
+- Contact management via People API with groups
 - Programmable Search Engine (PSE) integration
 
 </td>
@@ -241,7 +241,8 @@ APIs & Services → Library
 Search & enable:
 Calendar, Drive, Gmail,
 Docs, Sheets, Slides,
-Forms, Tasks, Chat, Search
+Forms, Tasks, People,
+Chat, Search
 ```
 <sub>See quick links below</sub>
 
@@ -293,6 +294,7 @@ Forms, Tasks, Chat, Search
 * [Enable Google Forms API](https://console.cloud.google.com/flows/enableapi?apiid=forms.googleapis.com)
 * [Enable Google Tasks API](https://console.cloud.google.com/flows/enableapi?apiid=tasks.googleapis.com)
 * [Enable Google Chat API](https://console.cloud.google.com/flows/enableapi?apiid=chat.googleapis.com)
+* [Enable Google People API](https://console.cloud.google.com/flows/enableapi?apiid=people.googleapis.com)
 * [Enable Google Custom Search API](https://console.cloud.google.com/flows/enableapi?apiid=customsearch.googleapis.com)
 * [Enable Google Apps Script API](https://console.cloud.google.com/flows/enableapi?apiid=script.googleapis.com)
 
@@ -553,7 +555,7 @@ docker run -e TOOL_TIER=core workspace-mcp
 docker run -e TOOLS="gmail drive calendar" workspace-mcp
 ```
 
-**Available Services**: `gmail` • `drive` • `calendar` • `docs` • `sheets` • `forms` • `tasks` • `chat` • `search`
+**Available Services**: `gmail` • `drive` • `calendar` • `docs` • `sheets` • `forms` • `tasks` • `contacts` • `chat` • `search`
 
 </details>
 
@@ -749,6 +751,30 @@ cp .env.oauth21 .env
 | `batch_modify_gmail_message_labels` | Complete | Batch modify labels |
 | `start_google_auth` | Complete | Legacy OAuth 2.0 auth (disabled when OAuth 2.1 is enabled) |
 
+<details>
+<summary><b>📎 Email Attachments</b> <sub><sup>← Send emails with files</sup></sub></summary>
+
+Both `send_gmail_message` and `draft_gmail_message` support attachments via two methods:
+
+**Option 1: File Path** (local server only)
+```python
+attachments=[{"path": "/path/to/report.pdf"}]
+```
+Reads file from disk, auto-detects MIME type. Optional `filename` override.
+
+**Option 2: Base64 Content** (works everywhere)
+```python
+attachments=[{
+    "filename": "report.pdf",
+    "content": "JVBERi0xLjQK...",  # base64-encoded
+    "mime_type": "application/pdf"   # optional
+}]
+```
+
+**⚠️ Centrally Hosted Servers**: When the MCP server runs remotely (cloud, shared instance), it cannot access your local filesystem. Use **Option 2** with base64-encoded content. Your MCP client must encode files before sending.
+
+</details>
+
 </td>
 <td width="50%" valign="top">
 
@@ -818,6 +844,7 @@ cp .env.oauth21 .env
 | `set_publish_settings` | Complete | Configure form settings |
 | `get_form_response` | Complete | Get individual responses |
 | `list_form_responses` | Extended | List all responses with pagination |
+| `batch_update_form` | Complete | Apply batch updates (questions, settings) |
 
 </td>
 <td width="50%" valign="top">
@@ -834,6 +861,27 @@ cp .env.oauth21 .env
 | `move_task` | Complete | Reposition tasks |
 | `clear_completed_tasks` | Complete | Hide completed tasks |
 | `*_task_list` | Complete | List/get/create/update/delete task lists |
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 👤 **Google Contacts** <sub>[`contacts_tools.py`](gcontacts/contacts_tools.py)</sub>
+
+| Tool | Tier | Description |
+|------|------|-------------|
+| `search_contacts` | **Core** | Search contacts by name, email, phone |
+| `get_contact` | **Core** | Retrieve detailed contact info |
+| `list_contacts` | **Core** | List contacts with pagination |
+| `create_contact` | **Core** | Create new contacts |
+| `update_contact` | Extended | Update existing contacts |
+| `delete_contact` | Extended | Delete contacts |
+| `list_contact_groups` | Extended | List contact groups/labels |
+| `get_contact_group` | Extended | Get group details with members |
+| `batch_*_contacts` | Complete | Batch create/update/delete contacts |
+| `*_contact_group` | Complete | Create/update/delete contact groups |
+| `modify_contact_group_members` | Complete | Add/remove contacts from groups |
 
 </td>
 </tr>

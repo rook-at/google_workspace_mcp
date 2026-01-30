@@ -45,6 +45,8 @@ from auth.scopes import (
     SLIDES_READONLY_SCOPE,
     TASKS_SCOPE,
     TASKS_READONLY_SCOPE,
+    CONTACTS_SCOPE,
+    CONTACTS_READONLY_SCOPE,
     CUSTOM_SEARCH_SCOPE,
     SCRIPT_PROJECTS_SCOPE,
     SCRIPT_PROJECTS_READONLY_SCOPE,
@@ -77,8 +79,8 @@ def _get_auth_context(
         if mcp_session_id:
             set_fastmcp_session_id(mcp_session_id)
 
-        logger.debug(
-            f"[{tool_name}] Auth from middleware: {authenticated_user} via {auth_method}"
+        logger.info(
+            f"[{tool_name}] Auth from middleware: authenticated_user={authenticated_user}, auth_method={auth_method}, session_id={mcp_session_id}"
         )
         return authenticated_user, auth_method, mcp_session_id
 
@@ -405,6 +407,7 @@ SERVICE_CONFIGS = {
     "forms": {"service": "forms", "version": "v1"},
     "slides": {"service": "slides", "version": "v1"},
     "tasks": {"service": "tasks", "version": "v1"},
+    "people": {"service": "people", "version": "v1"},
     "customsearch": {"service": "customsearch", "version": "v1"},
     "script": {"service": "script", "version": "v1"},
 }
@@ -445,6 +448,9 @@ SCOPE_GROUPS = {
     # Tasks scopes
     "tasks": TASKS_SCOPE,
     "tasks_read": TASKS_READONLY_SCOPE,
+    # Contacts scopes
+    "contacts": CONTACTS_SCOPE,
+    "contacts_read": CONTACTS_READONLY_SCOPE,
     # Custom Search scope
     "customsearch": CUSTOM_SEARCH_SCOPE,
     # Apps Script scopes
