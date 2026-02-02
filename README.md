@@ -8,7 +8,7 @@
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/workspace-mcp?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/workspace-mcp)
 [![Website](https://img.shields.io/badge/Website-workspacemcp.com-green.svg)](https://workspacemcp.com)
 
-*Full natural language control over Google Calendar, Drive, Gmail, Docs, Sheets, Slides, Forms, Tasks, Contacts, and Chat through all MCP clients, AI assistants and developer tools.*
+*Full natural language control over Google Calendar, Drive, Gmail, Docs, Sheets, Slides, Forms, Tasks, Contacts, and Chat through all MCP clients, AI assistants and developer tools. Also features CLI for use with tools like Claude Code and Codex*
 
 **The most feature-complete Google Workspace MCP server**, with Remote OAuth2.1 multi-user support and 1-click Claude installation.
 
@@ -359,6 +359,7 @@ export GOOGLE_PSE_ENGINE_ID=yyy
 export WORKSPACE_MCP_BASE_URI=
   http://localhost
 export WORKSPACE_MCP_PORT=8000
+export WORKSPACE_MCP_HOST=0.0.0.0  # Use 127.0.0.1 for localhost-only
 ```
 <sub>Server URL & port settings</sub>
 
@@ -393,6 +394,7 @@ export USER_GOOGLE_EMAIL=\
 |----------|-------------|---------|
 | `WORKSPACE_MCP_BASE_URI` | Base server URI (no port) | `http://localhost` |
 | `WORKSPACE_MCP_PORT` | Server listening port | `8000` |
+| `WORKSPACE_MCP_HOST` | Server bind host | `0.0.0.0` |
 | `WORKSPACE_EXTERNAL_URL` | External URL for reverse proxy setups | None |
 | `GOOGLE_OAUTH_REDIRECT_URI` | Override OAuth callback URL | Auto-constructed |
 | `USER_GOOGLE_EMAIL` | Default auth email | None |
@@ -537,6 +539,21 @@ uv run main.py --tools sheets docs
 uv run main.py --single-user --tools gmail
 ```
 
+
+**🔒 Read-Only Mode**
+```bash
+# Requests only read-only scopes & disables write tools
+uv run main.py --read-only
+
+# Combine with specific tools or tiers
+uv run main.py --tools gmail drive --read-only
+uv run main.py --tool-tier core --read-only
+```
+Read-only mode provides secure, restricted access by:
+- Requesting only `*.readonly` OAuth scopes (e.g., `gmail.readonly`, `drive.readonly`)
+- Automatically filtering out tools that require write permissions at startup
+- Allowing read operations: list, get, search, and export across all services
+
 **★ Tool Tiers**
 ```bash
 uv run main.py --tool-tier core      # ● Essential tools only
@@ -562,6 +579,110 @@ docker run -e TOOLS="gmail drive calendar" workspace-mcp
 </td>
 </tr>
 </table>
+
+</details>
+
+### CLI Mode
+
+The server supports a CLI mode for direct tool invocation without running the full MCP server. This is ideal for scripting, automation, and use by coding agents (Codex, Claude Code).
+
+<details open>
+<summary>▶ <b>CLI Commands</b> <sub><sup>← Direct tool execution from command line</sup></sub></summary>
+
+<table>
+<tr>
+<td width="50%" align="center">
+
+**▶ List Tools**
+```bash
+workspace-mcp --cli
+workspace-mcp --cli list
+workspace-mcp --cli list --json
+```
+<sub>View all available tools</sub>
+
+</td>
+<td width="50%" align="center">
+
+**◆ Tool Help**
+```bash
+workspace-mcp --cli search_gmail_messages --help
+```
+<sub>Show parameters and documentation</sub>
+
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+
+**▶ Run with Arguments**
+```bash
+workspace-mcp --cli search_gmail_messages \
+  --args '{"query": "is:unread"}'
+```
+<sub>Execute tool with inline JSON</sub>
+
+</td>
+<td width="50%" align="center">
+
+**◆ Pipe from Stdin**
+```bash
+echo '{"query": "is:unread"}' | \
+  workspace-mcp --cli search_gmail_messages
+```
+<sub>Pass arguments via stdin</sub>
+
+</td>
+</tr>
+</table>
+
+<details>
+<summary>≡ <b>CLI Usage Details</b> <sub><sup>← Complete reference</sup></sub></summary>
+
+**Command Structure:**
+```bash
+workspace-mcp --cli [command] [options]
+```
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `list` (default) | List all available tools |
+| `<tool_name>` | Execute the specified tool |
+| `<tool_name> --help` | Show detailed help for a tool |
+
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--args`, `-a` | JSON string with tool arguments |
+| `--json`, `-j` | Output in JSON format (for `list` command) |
+| `--help`, `-h` | Show help for a tool |
+
+**Examples:**
+```bash
+# List all Gmail tools
+workspace-mcp --cli list | grep gmail
+
+# Search for unread emails
+workspace-mcp --cli search_gmail_messages --args '{"query": "is:unread", "max_results": 5}'
+
+# Get calendar events for today
+workspace-mcp --cli get_events --args '{"calendar_id": "primary", "time_min": "2024-01-15T00:00:00Z"}'
+
+# Create a Drive file from a URL
+workspace-mcp --cli create_drive_file --args '{"name": "doc.pdf", "source_url": "https://example.com/file.pdf"}'
+
+# Combine with jq for processing
+workspace-mcp --cli list --json | jq '.tools[] | select(.name | contains("gmail"))'
+```
+
+**Notes:**
+- CLI mode uses OAuth 2.0 (same credentials as server mode)
+- Authentication flows work the same way - browser opens for first-time auth
+- Results are printed to stdout; errors go to stderr
+- Exit code 0 on success, 1 on error
+
+</details>
 
 </details>
 
@@ -715,6 +836,7 @@ cp .env.oauth21 .env
 | `get_drive_file_content` | **Core** | Read file content (Office formats) |
 | `get_drive_file_download_url` | **Core** | Get download URL for Drive files |
 | `create_drive_file` | **Core** | Create files or fetch from URLs |
+| `import_to_google_doc` | **Core** | Import files (MD, DOCX, HTML, etc.) as Google Docs |
 | `share_drive_file` | **Core** | Share file with users/groups/domains/anyone |
 | `get_drive_shareable_link` | **Core** | Get shareable links for a file |
 | `list_drive_items` | Extended | List folder contents |
@@ -789,6 +911,7 @@ attachments=[{
 | `find_and_replace_doc` | Extended | Find and replace text |
 | `list_docs_in_folder` | Extended | List docs in folder |
 | `insert_doc_elements` | Extended | Add tables, lists, page breaks |
+| `update_paragraph_style` | Extended | Apply heading styles (H1-H6) and paragraph formatting |
 | `insert_doc_image` | Complete | Insert images from Drive/URLs |
 | `update_doc_headers_footers` | Complete | Modify headers and footers |
 | `batch_update_doc` | Complete | Execute multiple operations |
