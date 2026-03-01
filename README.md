@@ -22,10 +22,10 @@
 
 <div align="center">
 <a href="https://glama.ai/mcp/servers/@taylorwilsdon/google_workspace_mcp">
-  <img width="195" src="https://glama.ai/mcp/servers/@taylorwilsdon/google_workspace_mcp/badge" alt="Google Workspace Server MCP server" align="center"/>
+  <img width="170" src="https://glama.ai/mcp/servers/@taylorwilsdon/google_workspace_mcp/badge" alt="Google Workspace Server MCP server" align="center"/>
 </a>
 <a href="https://www.pulsemcp.com/servers/taylorwilsdon-google-workspace">
-<img width="456" src="https://github.com/user-attachments/assets/0794ef1a-dc1c-447d-9661-9c704d7acc9d" align="center"/>
+<img width="375" src="https://github.com/user-attachments/assets/0794ef1a-dc1c-447d-9661-9c704d7acc9d" align="center"/>
 </a>
 </div>
 
@@ -560,6 +560,22 @@ Read-only mode provides secure, restricted access by:
 - Automatically filtering out tools that require write permissions at startup
 - Allowing read operations: list, get, search, and export across all services
 
+**🔐 Granular Permissions**
+```bash
+# Per-service permission levels
+uv run main.py --permissions gmail:organize drive:readonly
+
+# Combine permissions with tier filtering
+uv run main.py --permissions gmail:send drive:full --tool-tier core
+```
+Granular permissions mode provides service-by-service scope control:
+- Format: `service:level` (one entry per service)
+- Gmail levels: `readonly`, `organize`, `drafts`, `send`, `full` (cumulative)
+- Other services currently support: `readonly`, `full`
+- `--permissions` and `--read-only` are mutually exclusive
+- `--permissions` cannot be combined with `--tools`; enabled services are determined by the `--permissions` entries (optionally filtered by `--tool-tier`)
+- With `--tool-tier`, only tier-matched tools are enabled and only services that have tools in the selected tier are imported
+
 **★ Tool Tiers**
 ```bash
 uv run main.py --tool-tier core      # ● Essential tools only
@@ -738,6 +754,9 @@ uv run main.py --tool-tier complete                        # Enable all availabl
 uv run main.py --tools gmail drive --tool-tier core        # Core tools for specific services
 uv run main.py --tools gmail --tool-tier extended          # Extended Gmail functionality only
 uv run main.py --tools docs sheets --tool-tier complete    # Full access to Docs and Sheets
+
+# Combine tier selection with granular permission levels
+uv run main.py --permissions gmail:organize drive:full --tool-tier core
 ```
 
 ## 📋 Credential Configuration
