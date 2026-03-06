@@ -21,9 +21,6 @@
 </div>
 
 <div align="center">
-<a href="https://glama.ai/mcp/servers/@taylorwilsdon/google_workspace_mcp">
-  <img width="170" src="https://glama.ai/mcp/servers/@taylorwilsdon/google_workspace_mcp/badge" alt="Google Workspace Server MCP server" align="center"/>
-</a>
 <a href="https://www.pulsemcp.com/servers/taylorwilsdon-google-workspace">
 <img width="375" src="https://github.com/user-attachments/assets/0794ef1a-dc1c-447d-9661-9c704d7acc9d" align="center"/>
 </a>
@@ -571,6 +568,7 @@ uv run main.py --permissions gmail:send drive:full --tool-tier core
 Granular permissions mode provides service-by-service scope control:
 - Format: `service:level` (one entry per service)
 - Gmail levels: `readonly`, `organize`, `drafts`, `send`, `full` (cumulative)
+- Tasks levels: `readonly`, `manage`, `full` (cumulative; `manage` allows create/update/move but denies `delete` and `clear_completed`)
 - Other services currently support: `readonly`, `full`
 - `--permissions` and `--read-only` are mutually exclusive
 - `--permissions` cannot be combined with `--tools`; enabled services are determined by the `--permissions` entries (optionally filtered by `--tool-tier`)
