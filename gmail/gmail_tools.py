@@ -28,6 +28,7 @@ from core.utils import (
     validate_file_path,
     UserInputError,
     StringList,
+    JsonDict,
 )
 from core.server import server
 from auth.scopes import (
@@ -52,6 +53,9 @@ GMAIL_METADATA_HEADERS = [
     "In-Reply-To",
     "References",
     "Date",
+    "List-Unsubscribe",
+    "Precedence",
+    "List-Id",
 ]
 LOW_VALUE_TEXT_PLACEHOLDERS = (
     "your client does not support html",
@@ -935,6 +939,16 @@ async def get_gmail_message_content(
     if cc:
         content_lines.append(f"Cc:      {cc}")
 
+    list_unsub = headers.get("List-Unsubscribe", "")
+    precedence = headers.get("Precedence", "")
+    list_id = headers.get("List-Id", "")
+    if list_unsub:
+        content_lines.append(f"List-Unsubscribe: {list_unsub}")
+    if precedence:
+        content_lines.append(f"Precedence: {precedence}")
+    if list_id:
+        content_lines.append(f"List-Id: {list_id}")
+
     content_lines.append(f"\n--- BODY ---\n{body_data or '[No text/plain body found]'}")
 
     # Add attachment information if present
@@ -1113,6 +1127,17 @@ async def get_gmail_messages_content_batch(
                         msg_output += f"To: {to}\n"
                     if cc:
                         msg_output += f"Cc: {cc}\n"
+
+                    list_unsub = headers.get("List-Unsubscribe", "")
+                    precedence = headers.get("Precedence", "")
+                    list_id = headers.get("List-Id", "")
+                    if list_unsub:
+                        msg_output += f"List-Unsubscribe: {list_unsub}\n"
+                    if precedence:
+                        msg_output += f"Precedence: {precedence}\n"
+                    if list_id:
+                        msg_output += f"List-Id: {list_id}\n"
+
                     msg_output += f"Web Link: {_generate_gmail_web_url(mid)}\n"
 
                     output_messages.append(msg_output)
@@ -1151,6 +1176,17 @@ async def get_gmail_messages_content_batch(
                         msg_output += f"To: {to}\n"
                     if cc:
                         msg_output += f"Cc: {cc}\n"
+
+                    list_unsub = headers.get("List-Unsubscribe", "")
+                    precedence = headers.get("Precedence", "")
+                    list_id = headers.get("List-Id", "")
+                    if list_unsub:
+                        msg_output += f"List-Unsubscribe: {list_unsub}\n"
+                    if precedence:
+                        msg_output += f"Precedence: {precedence}\n"
+                    if list_id:
+                        msg_output += f"List-Id: {list_id}\n"
+
                     msg_output += (
                         f"Web Link: {_generate_gmail_web_url(mid)}\n\n{body_data}\n"
                     )
@@ -2217,8 +2253,8 @@ async def manage_gmail_filter(
     service,
     user_google_email: str,
     action: str,
-    criteria: Optional[Dict[str, Any]] = None,
-    filter_action: Optional[Dict[str, Any]] = None,
+    criteria: Optional[JsonDict] = None,
+    filter_action: Optional[JsonDict] = None,
     filter_id: Optional[str] = None,
 ) -> str:
     """
